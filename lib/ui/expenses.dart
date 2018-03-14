@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class Expenses extends StatefulWidget {
   @override
@@ -6,11 +7,34 @@ class Expenses extends StatefulWidget {
 }
 
 class ExpensesState extends State<Expenses> {
+  ScrollController _scrollController;
+  bool _isScrollingForward = true;
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = new ScrollController();
+    _scrollController.addListener(() {
+      setState(() {
+        if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.reverse) {
+
+            _isScrollingForward = false;
+
+        } else if (_scrollController.position.userScrollDirection ==
+            ScrollDirection.forward) {
+
+          _isScrollingForward = true;
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       body: _createListView(50),
-      floatingActionButton: new FloatingActionButton(
+      floatingActionButton: _isScrollingForward ? new FloatingActionButton(
         backgroundColor: Colors.deepOrange,
         onPressed: () {},
         child: new Icon(
@@ -18,7 +42,8 @@ class ExpensesState extends State<Expenses> {
           color: Colors.white,
         ),
         tooltip: 'Add expense',
-      ),
+
+      ): new Container(),
     );
   }
 
@@ -27,6 +52,7 @@ class ExpensesState extends State<Expenses> {
         itemBuilder: (BuildContext context, int index) {
           return _createListItem(index);
         },
+        controller: _scrollController,
         itemCount: count);
   }
 
@@ -57,7 +83,7 @@ class ExpensesState extends State<Expenses> {
           children: <Widget>[
             new Text(_getDate(index),
                 style: new TextStyle(fontSize: 16.0, color: Colors.black)),
-            new Text((index % 2 == 0) ? 'Income' : 'Expense',
+            new Text(_isEvenRow(index) ? 'Income' : 'Expense',
                 style: new TextStyle(fontSize: 12.0, color: Colors.grey))
           ],
         ));
@@ -65,7 +91,7 @@ class ExpensesState extends State<Expenses> {
 
   _getDate(int index){
     DateTime dateTime = new DateTime.now().add(new Duration(days: index));
-    return dateTime.day.toString()+'-'+ dateTime.month.toString()+'-'+dateTime.year.toString();
+    return dateTime.day.toString()+'/'+ dateTime.month.toString()+'/'+dateTime.year.toString();
   }
 
   _createListItemRightContent(index) {
